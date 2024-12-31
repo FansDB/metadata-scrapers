@@ -20,13 +20,13 @@ Pull requests are welcome.
 
 ### Repository structure
 
-- Each scraper should have its own folder under [./scrapers](./scrapers).  
+- Each scraper should have its own folder under [`/scrapers`](./scrapers).  
 - Folder name should reflect the network name used in FansDB.
 
 ### Validation
 The scrapers in this repository can be validated against a schema and checked for common errors.
 
-First, install the validator's dependencies - inside the [`./validator`](./validator) folder, run: `yarn`.
+First, install the validator's dependencies - inside the [`/validator`](./validator) folder, run: `yarn`.
 
 Then, to run the validator, use `node validate.js` in the root of the repository.
 Specific scrapers can be checked using: `node validate.js scrapers/folder/example.yml scrapers/folder2/example2.yml`
