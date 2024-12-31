@@ -12,7 +12,7 @@ These community scrapers are tailored towards FansDB data structure. To use you 
     - Local path: `fansdb`
 1. Click Confirm.
 1. Under Available Scrapers select **FansDB** package to expand it and see all available scrapers.
-1. Click the checkmark next to relevant scraper and click **Insall**.
+1. Click the checkmark next to relevant scraper and click **Install**.
 
 ## Contributing
 
