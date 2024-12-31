@@ -2,13 +2,15 @@
 
 These community scrapers are tailored towards FansDB data structure. To use you need to have [stashapp/stash](https://github.com/stashapp/stash) application.
 
+Source index: [`https://fansdb.github.io/metadata-scrapers/main/index.yml`](https://fansdb.github.io/metadata-scrapers/main/index.yml)
+
 ## Install 
 
 1. To add a new source go to Settings > **Metadata Providers** page.
 1. Under Available Scrapers click **Add Source**.
 1. Add the following details:
     - Name: `FansDB`
-    - Source URL: `https://fansdb.github.io/scrapers/main/index.yml`
+    - Source URL: `https://fansdb.github.io/metadata-scrapers/main/index.yml`
     - Local path: `fansdb`
 1. Click Confirm.
 1. Under Available Scrapers select **FansDB** package to expand it and see all available scrapers.
