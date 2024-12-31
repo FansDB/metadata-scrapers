@@ -1,0 +1,38 @@
+name: Scatbook
+performerByURL:
+  - action: scrapeXPath
+    url:
+      - scatbook.com
+    scraper: performerScraper
+performerByName:
+  action: scrapeXPath
+  queryURL: https://scatbook.com.com/{}
+  scraper: performerScraper
+xPathScrapers:
+  performerScraper:
+    performer:
+      Name:
+        selector: //div[@class='regular-text white-light-text mx-2']
+        postProcess:
+          - replace:
+              - regex: "^@"
+                with: ''
+      Aliases: 
+        selector: //div[@class='title-text-2 bold white--text mx-2 center']
+      URL: 
+        selector: //div[@class='regular-text white-light-text mx-2']
+        postProcess:
+          - replace:
+              - regex: "^@"
+                with: 'https://scatbook.com/'
+      Details:
+        selector: //div[@class='truncate five-lines']
+      Image:
+        selector: //div[@class='v-avatar']//div[@class='v-image__image v-image__image--cover']/@style
+        postProcess:
+          - replace:
+              - regex: .+\("(.+)"\).+
+                with: $1
+driver:
+  useCDP: true
+# Last Updated October 31, 2023
