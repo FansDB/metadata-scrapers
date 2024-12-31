@@ -6,7 +6,7 @@ Source index: [`https://fansdb.github.io/metadata-scrapers/main/index.yml`](http
 
 ## Install 
 
-1. To add a new source go to Settings > **Metadata Providers** page.
+1. To add a new source go to **Settings** > **Metadata Providers** page.
 1. Under Available Scrapers click **Add Source**.
 1. Add the following details:
     - Name: `FansDB`
