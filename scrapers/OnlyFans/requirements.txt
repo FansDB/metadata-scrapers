@@ -1,4 +1,0 @@
-emojis
-requests
-lxml
-stashapp-tools>=0.2.40
