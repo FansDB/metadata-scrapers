@@ -22,8 +22,11 @@ Pull requests are welcome.
 
 ### Repository structure
 
-- Each scraper should have its own folder under [`/scrapers`](./scrapers).  
-- Folder name should reflect the network name used in FansDB.
+- Each yaml scraper should be under proper folder based on the network name (`./scrapers/<network>`). 
+- Multiple scrapers can be under the same <network> folder.
+- Scrapers with only yaml files should be in the root folder under the <network>. 
+- Scrapers with files that have dependancies should have its own folder under the <network> root. 
+- <network> folder name should reflect the [network name used in FansDB](https://docs.fansdb.cc/networks).
 
 ### Validation
 The scrapers in this repository can be validated against a schema and checked for common errors.
