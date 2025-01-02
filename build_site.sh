@@ -75,11 +75,11 @@ buildScraper()
 }
 
 # find all yml files in ./scrapers - these are packages individually
-#for f in ./scrapers/*.yml; do 
-#    buildScraper "$f"
-#done
+for f in ./scrapers/*/*.yml; do 
+    buildScraper "$f"
+done
 
-find ./scrapers/ -mindepth 2 -name *.yml -print0 | while read -d $'\0' f; do
+find ./scrapers/ -mindepth 3 -name *.yml -print0 | while read -d $'\0' f; do
     buildScraper "$f"
 done
 
