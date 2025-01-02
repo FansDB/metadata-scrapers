@@ -1,0 +1,10 @@
+name: "SHA256 Lookup"
+sceneByFragment:
+    action: script
+    script:
+      - python
+      # use python3 instead if needed
+      - SHALookup.py
+      - query
+
+# Last Updated 2023-12-09

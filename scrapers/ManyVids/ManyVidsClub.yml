@@ -39,4 +39,4 @@ jsonScrapers:
              - replace:
                 - regex: (.+)
                   with: "$1 (ManyVids)"
-# Last Updated October 20, 2024
+# Last Updated December 27, 2024

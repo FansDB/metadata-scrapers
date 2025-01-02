@@ -211,7 +211,7 @@ jsonScrapers:
           postProcess:
             - replace:
                 - regex: .+Profile\/\d+\/(.+)\/Store.+
-                  with: $1 (ManyVids)
+                  with: "$1 (ManyVids)"
         URL:
           selector: data.model.profileUrl
           postProcess:

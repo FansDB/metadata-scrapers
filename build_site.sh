@@ -47,12 +47,15 @@ buildScraper()
     # always ignore package file
     ignore="-x $ignore package"
 
+    # For any directory, we want to include the target yml file and all non-yml files
     pushd "$dir" > /dev/null
-    if [ "$dir" != "./scrapers" ]; then
-        zip -r "$zipfile" . ${ignore} > /dev/null
-    else
-        zip "$zipfile" "$scraper_id.yml" > /dev/null
-    fi
+    # First zip just the target yml file
+    zip "$zipfile" "$scraper_id.yml" > /dev/null
+
+    # Then find and add all non-yml files in the current directory
+    find . -type f ! -name "*.yml" -print0 | while read -d $'\0' file; do
+        zip -g "$zipfile" "$file" ${ignore} > /dev/null
+    done
     popd > /dev/null
 
     # write to spec index
@@ -74,12 +77,8 @@ buildScraper()
     echo "" >> "$outdir"/index.yml
 }
 
-# find all yml files in ./scrapers - these are packages individually
-for f in ./scrapers/*/*.yml; do 
-    buildScraper "$f"
-done
-
-find ./scrapers/ -mindepth 3 -name *.yml -print0 | while read -d $'\0' f; do
+# skip scrapers in root directory
+find ./scrapers/ -mindepth 2 -name *.yml -print0 | while read -d $'\0' f; do
     buildScraper "$f"
 done
 
