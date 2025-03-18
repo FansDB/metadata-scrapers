@@ -289,7 +289,7 @@ def scrape():
         result = getPostByHash(hash)
         if result is not None:
             # set studio code to prefix of files that match pattern like '*_source.mp4'
-            if m := re.search('(\w+)_source\..+$', f['path']):
+            if m := re.search(r'(\w+)_source\..+$', f['path']):
                 result['code'] = m.group(1)
             break
     # if no result, add "SHA: No Match tag"
