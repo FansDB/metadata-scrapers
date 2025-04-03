@@ -70,7 +70,7 @@ def clean_html_content(content):
         The cleaned content string.
     """
     # Replace <br /> and <br> with newlines
-    content = content.replace("<br />", "\n").replace("<br>", "\n""\n")
+    content = content.replace("<br />", "\n").replace("<br>", "\n")
     # Remove HTML tags (including <p> and any remaining <br>)
     content = re.sub(r'<[^>]+>', '', content)
     # Unescape HTML entities
@@ -144,7 +144,7 @@ def splitLookup(scene, hash):
 
 def searchPerformers(scene):
     pattern = re.compile(r"(?:^|\s)@([\w\-\.]+)")
-    content = clean_html_content(scene['content']) # Use the new function here
+    content = clean_html_content(scene['content'])
     # if title is truncated, remove trailing dots and skip searching title
     if scene['title'].endswith('..') and scene['title'].removesuffix('..') in content:
         searchtext = content
@@ -195,7 +195,7 @@ def format_title(description, username, date):
 def parseAPI(scene, hash):
     date = datetime.strptime(scene['published'], '%Y-%m-%dT%H:%M:%S').strftime('%Y-%m-%d')
     result = {}
-    scene['content'] = clean_html_content(scene['content']) # Use the new function here
+    scene['content'] = clean_html_content(scene['content'])
     # title parsing
     result['Details'] = scene['content']
     result['Date'] = date
