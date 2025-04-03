@@ -56,6 +56,29 @@ except ModuleNotFoundError:
 session = requests.Session()
 session.headers.update(headers)
 
+import re
+from html import unescape
+
+def clean_html_content(content):
+    """
+    Cleans HTML content by removing tags, unescaping entities, and replacing line breaks.
+
+    Args:
+        content: The HTML content string.
+
+    Returns:
+        The cleaned content string.
+    """
+    # Replace <br /> and <br> with newlines
+    content = content.replace("<br />", "\n").replace("<br>", "\n""\n")
+    # Remove HTML tags (including <p> and any remaining <br>)
+    content = re.sub(r'<[^>]+>', '', content)
+    # Unescape HTML entities
+    content = unescape(content)
+    # Remove extra whitespace
+    content = re.sub(r'\s+', ' ', content).strip()
+    return content
+
 # calculate sha256
 def compute_sha256(file_name):
     hash_sha256 = hashlib.sha256()
@@ -121,7 +144,7 @@ def splitLookup(scene, hash):
 
 def searchPerformers(scene):
     pattern = re.compile(r"(?:^|\s)@([\w\-\.]+)")
-    content = unescape(scene['content'])
+    content = clean_html_content(scene['content']) # Use the new function here
     # if title is truncated, remove trailing dots and skip searching title
     if scene['title'].endswith('..') and scene['title'].removesuffix('..') in content:
         searchtext = content
@@ -155,7 +178,7 @@ def normalize_title(title):
 
 # from dolphinfix
 def format_title(description, username, date):
-    firstline = description.split("\n")[0].strip().replace("<br />", "")
+    firstline = clean_html_content(description).split("\n")[0].strip()
     formatted_title = truncate_title(
         normalize_title(firstline), MAX_TITLE_LENGTH
     )
@@ -172,7 +195,7 @@ def format_title(description, username, date):
 def parseAPI(scene, hash):
     date = datetime.strptime(scene['published'], '%Y-%m-%dT%H:%M:%S').strftime('%Y-%m-%d')
     result = {}
-    scene['content'] = unescape(scene['content']).replace("<br />", "\n")
+    scene['content'] = clean_html_content(scene['content']) # Use the new function here
     # title parsing
     result['Details'] = scene['content']
     result['Date'] = date
