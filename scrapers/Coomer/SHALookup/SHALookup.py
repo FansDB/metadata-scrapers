@@ -112,6 +112,7 @@ def getPostByHash(hash):
     scene = postres.json()
     scene = scene["post"]
     return splitLookup(scene, hash)
+    return splitLookup(scene, hash)
 
 def splitLookup(scene, hash):
     if (scene['service'] == "fansly"):
@@ -179,6 +180,7 @@ def parseAPI(scene, hash):
     result['Studio'] = {}
     result['Performers'] = []
     result['Tags'] = []
+    result['URLs'] = []
     # parse usernames
     usernames = searchPerformers(scene)
     log.debug(f"{usernames=}")
@@ -192,11 +194,28 @@ def parseAPI(scene, hash):
     else:
         files = scene['attachments']
     # only include videos
-    files = [file for file in files if file['path'].endswith(".m4v") or file['path'].endswith(".mp4")]
+    image_extensions = (".jpg", ".png", ".gif", ".jpeg")
+    video_extensions = (".mp4", ".m4v")
+    
+    videofiles = [file for file in files if file['path'].endswith(video_extensions)]
+    imagefiles = [file for file in files if file['path'].endswith(image_extensions)]
+    # assume most scraped files are videos
+    contentfiles = None
+    scene['type'] = None
+    #determine scrape content
     for i, file in enumerate(files):
         if hash in file['path']:
+            if (file['path'].lower().endswith(image_extensions)):
+                scene['type'] = "image"
+                contentfiles = imagefiles
+            else:
+                scene['type'] = "video"
+                contentfiles = videofiles
+    #get video or image total and content position
+    for i, file in enumerate(contentfiles):
+        if hash in file['path']:
             scene['part'] = i + 1
-    scene['total'] = len(files)
+            scene['total'] = len(contentfiles)
     # add studio in specific function
     return result, scene
 
@@ -225,7 +244,10 @@ def parseFansly(scene, hash):
     result['Title'] = format_title(result['Details'], username, result['Date'])
     # add part on afterwards
     if scene['total'] > 1:
-        result['Title'] += f" {scene['part']}/{scene['total']}"
+        if scene['type'] == "image":
+            result['Title'] += f" {scene['part']}/{scene['total']} pics"
+        else:
+            result['Title'] += f" {scene['part']}/{scene['total']}"
     # craft fansly URL
     result['URL'] = f"https://fansly.com/post/{scene['id']}"
     # add studio and performer
@@ -246,9 +268,12 @@ def parseOnlyFans(scene, hash):
     result['Title'] = format_title(result['Details'], username, result['Date'])
     # add part on afterwards
     if scene['total'] > 1:
-        result['Title'] += f" {scene['part']}/{scene['total']}"
+        if scene['type'] == "image":
+            result['Title'] += f" {scene['part']}/{scene['total']} pics"
+        else:
+            result['Title'] += f" {scene['part']}/{scene['total']}"
     # craft OnlyFans URL
-    result['URL'] = f"https://onlyfans.com/{scene['id']}/{username}"
+    result['URLs'].append(f"https://onlyfans.com/{scene['id']}/{username}")
     # add studio and performer
     result['Studio']['Name'] = f"{username} (OnlyFans)"
     result['Performers'].append({ 'Name': getnamefromalias(username) })
@@ -276,35 +301,54 @@ def check_video_vertical(scene):
 
 def scrape():
     FRAGMENT = json.loads(sys.stdin.read())
-    SCENE_ID = FRAGMENT.get('id')
+    FRAGMENT_ID = FRAGMENT.get('id')
+    scene = None
+    image = False
+    if "photographer" in FRAGMENT:
+        scene = stash.find_image(FRAGMENT_ID)
+        files = scene['visual_files']
+        image = True
+    elif "files" in FRAGMENT:
+        scene = stash.find_scene(FRAGMENT_ID)
+        files = scene['files']
     nomatch_id = stash.find_tag(failure_tag, create=True).get('id')
-    scene = stash.find_scene(SCENE_ID)
     if not scene:
-        log.error("Scene not found - check your config.py file")
+        log.error("Scene/Image not found - check your config.py file")
         sys.exit(1)
     result = None
-    for f in scene['files']:
-        hash = hash_file(f)
-        log.debug(hash)
-        result = getPostByHash(hash)
-        if result is not None:
-            # set studio code to prefix of files that match pattern like '*_source.mp4'
-            if m := re.search(r'(\w+)_source\..+$', f['path']):
-                result['code'] = m.group(1)
-            break
+    if scene:
+        for f in files:
+            hash = hash_file(f)
+            log.debug(hash)
+            result = getPostByHash(hash)
+            if result is not None:
+                # set studio code to prefix of files that match pattern like '*_source.mp4'
+                if m := re.search(r'(\w+)_source\..+$', f['path']):
+                    result['code'] = m.group(1)
+                break
     # if no result, add "SHA: No Match tag"
-    if (result == None or not result['Title'] or not result['URL']):
-        stash.update_scenes({
-            'ids': [SCENE_ID],
-            'tag_ids': {
-                'mode': 'ADD',
-                'ids': [nomatch_id]
-            }
-        })
+    if (result == None or not result['Title'] or not result['URLs']):
+        if scene and not image:
+            stash.update_scenes({
+                'ids': [FRAGMENT_ID],
+                'tag_ids': {
+                    'mode': 'ADD',
+                    'ids': [nomatch_id]
+                }
+            })
+        elif image:
+            stash.update_images({
+                'ids': [FRAGMENT_ID],
+                'tag_ids': {
+                    'mode': 'ADD',
+                    'ids': [nomatch_id]
+                }
+            })
         return None
     # check if scene is vertical
-    if check_video_vertical(scene):
-        result['Tags'].append({ 'Name': 'Vertical Video' })
+    if scene and not image:
+        if check_video_vertical(scene):
+            result['Tags'].append({ 'Name': 'Vertical Video' })
     # Other context based tags
     if re.search(r"\bJOI\b", result['Title'], flags=re.IGNORECASE):
         result['Tags'].append({ 'Name': 'Jerk Off Instruction' })
