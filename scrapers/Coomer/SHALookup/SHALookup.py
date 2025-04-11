@@ -112,7 +112,6 @@ def getPostByHash(hash):
     scene = postres.json()
     scene = scene["post"]
     return splitLookup(scene, hash)
-    return splitLookup(scene, hash)
 
 def splitLookup(scene, hash):
     if (scene['service'] == "fansly"):
