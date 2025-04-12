@@ -12,6 +12,7 @@ def checkLNP(str):
 Utility function to call 2 other functions which remove Combining Marks/Invisible characters
 """
 def clean(str):
+  str = re.sub(r'<.*?>', '', str)
   str = re.sub(regexLineBreakCombiningMarks, '', str)
   str = re.sub(regexSymbolWithCombiningMarks, '$1', str)
   str = re.sub(r'[\u200B-\u200D\uFEFF\u2063]', '', str)
