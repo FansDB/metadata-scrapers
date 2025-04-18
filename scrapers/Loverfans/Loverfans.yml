@@ -1,0 +1,41 @@
+name: "Loverfans"
+sceneByURL:
+  - action: scrapeJson
+    url:
+      - loverfans.com/posts
+    scraper: sceneScraper
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: '.+posts\/(.+)'
+          with: https://api.loverfans.com/api/posts/$1
+jsonScrapers:
+  sceneScraper:
+    scene:
+      Title: 
+        selector: title
+      Details:
+        selector: content 
+        postProcess:
+         - javascript: |
+            return decodeURIComponent(value);
+      Code: 
+        selector: id
+      Date:
+        selector: publishedAt
+        postProcess:
+          - parseDate: 2006-01-02T15:04:05.000Z
+      Image:
+        selector: resources.0.cover
+      Tags:
+        Name: categories.#.en
+      Performers:
+        Name: username
+      Studio:
+        Name: 
+          selector: username
+          postProcess:
+             - replace:
+                - regex: (.+)
+                  with: "$1 (Loverfans)"
+# Last Updated April 18, 2025
