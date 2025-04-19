@@ -1,4 +1,24 @@
 name: "Loverfans"
+imageByURL:
+  - action: scrapeJson
+    url:
+      - loverfans.com/posts
+    scraper: imageScraper
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: '.+posts\/(.+)'
+          with: https://api.loverfans.com/api/posts/$1
+performerByURL:
+  - action: scrapeJson
+    url:
+      - loverfans.com
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: 'https:\/\/loverfans\.com\/(.+)'
+          with: https://api.loverfans.com/api/users/$1
+    scraper: performerScraper
 sceneByURL:
   - action: scrapeJson
     url:
@@ -10,6 +30,53 @@ sceneByURL:
         - regex: '.+posts\/(.+)'
           with: https://api.loverfans.com/api/posts/$1
 jsonScrapers:
+  imageScraper:
+    image:
+      Title: 
+        selector: title
+      Details:
+        selector: content 
+        postProcess:
+         - javascript: |
+            return decodeURIComponent(value);
+      Code: 
+        selector: id
+      Date:
+        selector: publishedAt
+        postProcess:
+          - parseDate: 2006-01-02T15:04:05.000Z
+      Tags:
+        Name: tags.#.name
+      Performers:
+        Name: username
+      Studio:
+        Name: 
+          selector: username
+          postProcess:
+             - replace:
+                - regex: (.+)
+                  with: "$1 (Loverfans)"
+  performerScraper:
+    performer:
+      Name:
+        selector: username
+      Aliases:
+        selector: displayName
+      #Country:
+      #  selector: country
+      #  postprocess:
+      #    - javascript: |
+      #        const regionNames = new Intl.DisplayNames(['en'], { type: 'region' , fallback: "code"}); 
+      #        return regionNames.of(value);
+      Details:
+        selector: description
+        postProcess:
+          - javascript: |
+              return decodeURIComponent(value);
+      Image:
+        selector: avatarS3Route
+      Tags:
+        Name: tags.#.name
   sceneScraper:
     scene:
       Title: 
@@ -38,4 +105,4 @@ jsonScrapers:
              - replace:
                 - regex: (.+)
                   with: "$1 (Loverfans)"
-# Last Updated April 18, 2025
+# Last Updated April 19, 2025
