@@ -326,7 +326,7 @@ def scrape():
                     result['code'] = m.group(1)
                 break
     # if no result, add "SHA: No Match tag"
-    if (result == None or not result['Title'] or not result['URLs']):
+    if (result == None or not result['Title']):
         if scene and not image:
             stash.update_scenes({
                 'ids': [FRAGMENT_ID],
