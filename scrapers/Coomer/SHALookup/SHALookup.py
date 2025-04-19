@@ -95,7 +95,7 @@ def getPostByHash(hash):
         time.sleep(2)
     shares.raise_for_status()
     data = shares.json()
-    if (shares.status_code == 404 or len(data) == 0):
+    if (shares.status_code == 404 or data is None or len(data) == 0):
         log.debug("No results found")
         return None
     # construct url to fetch from API
