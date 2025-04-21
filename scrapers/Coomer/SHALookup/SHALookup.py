@@ -92,6 +92,10 @@ def getPostByHash(hash):
             log.debug("No results found")
             return None
         log.debug(f"Request status code: {shares.status_code}")
+        if shares.status_code == 429:
+            ratelimit_delay = (_ * 2)
+            log.debug(f"Rate limited, waiting {ratelimit_delay} seconds before retry ")
+            time.sleep(ratelimit_delay)
         time.sleep(2)
     shares.raise_for_status()
     data = shares.json()
