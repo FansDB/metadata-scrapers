@@ -211,6 +211,10 @@ def parseAPI(scene, hash):
                 scene['type'] = "video"
                 contentfiles = videofiles
     #get video or image total and content position
+    if contentfiles is None:
+        log.debug("API returned response but could not match any file. Probably because the file is in a previous revision of the post.")
+        scene['total'] = 0
+        return result, scene
     for i, file in enumerate(contentfiles):
         if hash in file['path']:
             scene['part'] = i + 1
