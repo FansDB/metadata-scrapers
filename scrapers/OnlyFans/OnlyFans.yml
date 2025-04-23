@@ -20,15 +20,17 @@ sceneByFragment:
 jsonScrapers:
   sceneScraper:
     scene:
-      Title: title
-      Details: content
+      Title: 
+        selector: post.title
+      Details: 
+        selector: post.content
       Date:
-        selector: published
+        selector: post.published
         postProcess:
           - parseDate: 2006-01-02T15:04:05
       Studio:
         Name:
-            selector: user
+            selector: post.user
             postProcess:
               - replace:
                   - regex: (\w+)
