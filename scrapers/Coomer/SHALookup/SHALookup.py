@@ -24,7 +24,7 @@ stashconfig = config.stashconfig if hasattr(config, 'stashconfig') else {
 success_tag = config.success_tag if hasattr(config, 'success_tag') else "SHA: Match"
 failure_tag = config.failure_tag if hasattr(config, 'failure_tag') else "SHA: No Match"
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 MAX_TITLE_LENGTH = 64
 
 headers = {
