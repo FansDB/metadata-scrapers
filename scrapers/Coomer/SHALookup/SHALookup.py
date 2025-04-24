@@ -157,9 +157,16 @@ def normalize_title(title):
     unconfused = remove(title)
     return unconfused.strip()
 
+def strip_line_breaks(text):
+    for linebreak in ["<br >", "<p>", "</p>"]:
+        text = text.replace(linebreak, "")
+    return text
+
 # from dolphinfix
 def format_title(description, username, date):
-    firstline = description.split("\n")[0].strip().replace("<br />", "")
+    firstline = description.split("\n")[0].strip()
+    # strip breaks
+    firstline = strip_line_breaks(firstline)
     formatted_title = truncate_title(
         normalize_title(firstline), MAX_TITLE_LENGTH
     )
@@ -176,7 +183,7 @@ def format_title(description, username, date):
 def parseAPI(scene, hash):
     date = datetime.strptime(scene['published'], '%Y-%m-%dT%H:%M:%S').strftime('%Y-%m-%d')
     result = {}
-    scene['content'] = unescape(scene['content']).replace("<br />", "\n")
+    scene['content'] = strip_line_breaks(unescape(scene['content']).replace("<br />", "\n"))
     # title parsing
     result['Details'] = scene['content']
     result['Date'] = date
@@ -256,10 +263,22 @@ def parseFansly(scene, hash):
         else:
             result['Title'] += f" {scene['part']}/{scene['total']}"
     # craft fansly URL
-    result['URL'] = f"https://fansly.com/post/{scene['id']}"
+    postURL = f"https://fansly.com/posts/{scene['id']}"
+    result['URLs'].append(postURL)
     # add studio and performer
-    result['Studio']['Name'] = f"{username} (Fansly)"
+    studioName = f"{username} (Fansly)"
+    result['Studio']['Name'] = studioName
     result['Performers'].append({ 'Name': getnamefromalias(username) })
+    # add to group
+    # add to group
+    result['Groups'] = [{
+        "Name": f"{studioName} - ${scene['id']}",
+        "Date": result['Date'],
+        "Tags": result['Tags'], # exclusion of trailer tag is on purpose
+        "Performers": result['Performers'],
+        "Studio": result['Studio'],
+        "URLs": result['URLs']
+    }]
     # Add trailer if hash matches preview
     for attachment in scene['attachments']:
         if 'preview' in attachment['name'] and hash in attachment['path']:
@@ -280,10 +299,21 @@ def parseOnlyFans(scene, hash):
         else:
             result['Title'] += f" {scene['part']}/{scene['total']}"
     # craft OnlyFans URL
-    result['URLs'].append(f"https://onlyfans.com/{scene['id']}/{username}")
+    postURL = f"https://onlyfans.com/{scene['id']}/{username}"
+    result['URLs'].append(postURL)
     # add studio and performer
-    result['Studio']['Name'] = f"{username} (OnlyFans)"
+    studioName = f"{username} (OnlyFans)"
+    result['Studio']['Name'] = studioName
     result['Performers'].append({ 'Name': getnamefromalias(username) })
+    # add to group
+    result['Groups'] = [{
+        "Name": f"{studioName} - {scene['id']}",
+        "Date": result['Date'],
+        "Tags": result['Tags'], # exclusion of trailer tag is on purpose
+        "Performers": result['Performers'],
+        "Studio": result['Studio'],
+        "URLs": result['URLs']
+    }]
     # add trailer tag if contains keywords
     if findTrailerTrigger(result['Details']):
         result['Tags'].append({ "Name": 'Trailer' })
