@@ -111,7 +111,7 @@ def getPostByHash(hash):
         log.error("Post not found")
         sys.exit(1)
     elif not postres.status_code == 200:
-        log.error(f"Request failed with status code {postres.status}")
+        log.error(f"Request failed with status code {postres.status_code}")
         sys.exit(1)
     scene = postres.json()
     scene = scene["post"]
@@ -244,7 +244,7 @@ def getnamefromalias(alias):
 def getFanslyUsername(id):
     res = session.get(f"{API_BASE}fansly/user/{id}/profile")
     if not res.status_code == 200:
-        log.error(f"Request failed with status code {res.status}")
+        log.error(f"Request failed with status code {res.status_code}")
         sys.exit(1)
     profile = res.json()
     return profile["name"]
@@ -321,11 +321,20 @@ def parseOnlyFans(scene, hash):
 
 def hash_file(file):
     fingerprints = file['fingerprints']
+    filename = file['path']
+    # check for sha256 in filename
+    filename_hash = re.search(r"([a-f0-9]{64})", filename)
     if sha256_fp := [fp for fp in fingerprints if fp['type'] == 'sha256']:
-        log.debug("Found in fingerprints")
+        log.debug("[SHA256] found in fingerprints")
         return sha256_fp[0]['value']
+    # check if filename contains hash
+    elif filename_hash:
+        log.debug("[SHA256] found in filename")
+        result = filename_hash.group(1)
+        # don't add to fingerprints, just search with it
+        return result
     else:
-        log.debug("Not found in fingerprints")
+        log.debug("[SHA256] not found, calculating...")
         sha256 = sha_file(file)
         # add to fingerprints
         stash.file_set_fingerprints(file['id'], {"type": "sha256", "value": sha256})
