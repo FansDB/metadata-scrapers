@@ -157,16 +157,17 @@ def normalize_title(title):
     unconfused = remove(title)
     return unconfused.strip()
 
-def strip_line_breaks(text):
-    for linebreak in ["<br >", "<p>", "</p>"]:
-        text = text.replace(linebreak, "")
+def strip_line_breaks(text, newline="\n"):
+    # replace <br> with newline
+    text = text.replace("<br>", newline)
+    text = re.sub(r"<[^>]+>", "", text) # remove all html tags
     return text
 
 # from dolphinfix
 def format_title(description, username, date):
     firstline = description.split("\n")[0].strip()
     # strip breaks
-    firstline = strip_line_breaks(firstline)
+    firstline = strip_line_breaks(firstline, "") # don't add newlines
     formatted_title = truncate_title(
         normalize_title(firstline), MAX_TITLE_LENGTH
     )
@@ -183,7 +184,7 @@ def format_title(description, username, date):
 def parseAPI(scene, hash):
     date = datetime.strptime(scene['published'], '%Y-%m-%dT%H:%M:%S').strftime('%Y-%m-%d')
     result = {}
-    scene['content'] = strip_line_breaks(unescape(scene['content']).replace("<br />", "\n"))
+    scene['content'] = strip_line_breaks(unescape(scene['content']))
     # title parsing
     result['Details'] = scene['content']
     result['Date'] = date
