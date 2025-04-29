@@ -24,7 +24,7 @@ stashconfig = config.stashconfig if hasattr(config, 'stashconfig') else {
 success_tag = config.success_tag if hasattr(config, 'success_tag') else "SHA: Match"
 failure_tag = config.failure_tag if hasattr(config, 'failure_tag') else "SHA: No Match"
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 MAX_TITLE_LENGTH = 64
 
 headers = {
@@ -92,10 +92,14 @@ def getPostByHash(hash):
             log.debug("No results found")
             return None
         log.debug(f"Request status code: {shares.status_code}")
+        if shares.status_code == 429:
+            ratelimit_delay = (_ * 2)
+            log.debug(f"Rate limited, waiting {ratelimit_delay} seconds before retry ")
+            time.sleep(ratelimit_delay)
         time.sleep(2)
     shares.raise_for_status()
     data = shares.json()
-    if (shares.status_code == 404 or len(data) == 0):
+    if (shares.status_code == 404 or data is None or len(data) == 0):
         log.debug("No results found")
         return None
     # construct url to fetch from API
@@ -107,7 +111,7 @@ def getPostByHash(hash):
         log.error("Post not found")
         sys.exit(1)
     elif not postres.status_code == 200:
-        log.error(f"Request failed with status code {postres.status}")
+        log.error(f"Request failed with status code {postres.status_code}")
         sys.exit(1)
     scene = postres.json()
     scene = scene["post"]
@@ -153,9 +157,17 @@ def normalize_title(title):
     unconfused = remove(title)
     return unconfused.strip()
 
+def strip_line_breaks(text, newline="\n"):
+    # replace <br> with newline
+    text = text.replace("<br>", newline)
+    text = re.sub(r"<[^>]+>", "", text) # remove all html tags
+    return text
+
 # from dolphinfix
 def format_title(description, username, date):
-    firstline = description.split("\n")[0].strip().replace("<br />", "")
+    firstline = description.split("\n")[0].strip()
+    # strip breaks
+    firstline = strip_line_breaks(firstline, "") # don't add newlines
     formatted_title = truncate_title(
         normalize_title(firstline), MAX_TITLE_LENGTH
     )
@@ -172,13 +184,14 @@ def format_title(description, username, date):
 def parseAPI(scene, hash):
     date = datetime.strptime(scene['published'], '%Y-%m-%dT%H:%M:%S').strftime('%Y-%m-%d')
     result = {}
-    scene['content'] = unescape(scene['content']).replace("<br />", "\n")
+    scene['content'] = strip_line_breaks(unescape(scene['content']))
     # title parsing
     result['Details'] = scene['content']
     result['Date'] = date
     result['Studio'] = {}
     result['Performers'] = []
     result['Tags'] = []
+    result['URLs'] = []
     # parse usernames
     usernames = searchPerformers(scene)
     log.debug(f"{usernames=}")
@@ -192,11 +205,32 @@ def parseAPI(scene, hash):
     else:
         files = scene['attachments']
     # only include videos
-    files = [file for file in files if file['path'].endswith(".m4v") or file['path'].endswith(".mp4")]
+    image_extensions = (".jpg", ".png", ".gif", ".jpeg")
+    video_extensions = (".mp4", ".m4v")
+    
+    videofiles = [file for file in files if file['path'].endswith(video_extensions)]
+    imagefiles = [file for file in files if file['path'].endswith(image_extensions)]
+    # assume most scraped files are videos
+    contentfiles = None
+    scene['type'] = None
+    #determine scrape content
     for i, file in enumerate(files):
         if hash in file['path']:
+            if (file['path'].lower().endswith(image_extensions)):
+                scene['type'] = "image"
+                contentfiles = imagefiles
+            else:
+                scene['type'] = "video"
+                contentfiles = videofiles
+    #get video or image total and content position
+    if contentfiles is None:
+        log.debug("API returned response but could not match any file. Probably because the file is in a previous revision of the post.")
+        scene['total'] = 0
+        return result, scene
+    for i, file in enumerate(contentfiles):
+        if hash in file['path']:
             scene['part'] = i + 1
-    scene['total'] = len(files)
+            scene['total'] = len(contentfiles)
     # add studio in specific function
     return result, scene
 
@@ -211,7 +245,7 @@ def getnamefromalias(alias):
 def getFanslyUsername(id):
     res = session.get(f"{API_BASE}fansly/user/{id}/profile")
     if not res.status_code == 200:
-        log.error(f"Request failed with status code {res.status}")
+        log.error(f"Request failed with status code {res.status_code}")
         sys.exit(1)
     profile = res.json()
     return profile["name"]
@@ -225,12 +259,27 @@ def parseFansly(scene, hash):
     result['Title'] = format_title(result['Details'], username, result['Date'])
     # add part on afterwards
     if scene['total'] > 1:
-        result['Title'] += f" {scene['part']}/{scene['total']}"
+        if scene['type'] == "image":
+            result['Title'] += f" {scene['part']}/{scene['total']} pics"
+        else:
+            result['Title'] += f" {scene['part']}/{scene['total']}"
     # craft fansly URL
-    result['URL'] = f"https://fansly.com/post/{scene['id']}"
+    postURL = f"https://fansly.com/posts/{scene['id']}"
+    result['URLs'].append(postURL)
     # add studio and performer
-    result['Studio']['Name'] = f"{username} (Fansly)"
+    studioName = f"{username} (Fansly)"
+    result['Studio']['Name'] = studioName
     result['Performers'].append({ 'Name': getnamefromalias(username) })
+    # add to group
+    # add to group
+    result['Groups'] = [{
+        "Name": f"{studioName} - ${scene['id']}",
+        "Date": result['Date'],
+        "Tags": result['Tags'], # exclusion of trailer tag is on purpose
+        "Performers": result['Performers'],
+        "Studio": result['Studio'],
+        "URLs": result['URLs']
+    }]
     # Add trailer if hash matches preview
     for attachment in scene['attachments']:
         if 'preview' in attachment['name'] and hash in attachment['path']:
@@ -246,12 +295,26 @@ def parseOnlyFans(scene, hash):
     result['Title'] = format_title(result['Details'], username, result['Date'])
     # add part on afterwards
     if scene['total'] > 1:
-        result['Title'] += f" {scene['part']}/{scene['total']}"
+        if scene['type'] == "image":
+            result['Title'] += f" {scene['part']}/{scene['total']} pics"
+        else:
+            result['Title'] += f" {scene['part']}/{scene['total']}"
     # craft OnlyFans URL
-    result['URL'] = f"https://onlyfans.com/{scene['id']}/{username}"
+    postURL = f"https://onlyfans.com/{scene['id']}/{username}"
+    result['URLs'].append(postURL)
     # add studio and performer
-    result['Studio']['Name'] = f"{username} (OnlyFans)"
+    studioName = f"{username} (OnlyFans)"
+    result['Studio']['Name'] = studioName
     result['Performers'].append({ 'Name': getnamefromalias(username) })
+    # add to group
+    result['Groups'] = [{
+        "Name": f"{studioName} - {scene['id']}",
+        "Date": result['Date'],
+        "Tags": result['Tags'], # exclusion of trailer tag is on purpose
+        "Performers": result['Performers'],
+        "Studio": result['Studio'],
+        "URLs": result['URLs']
+    }]
     # add trailer tag if contains keywords
     if findTrailerTrigger(result['Details']):
         result['Tags'].append({ "Name": 'Trailer' })
@@ -259,11 +322,20 @@ def parseOnlyFans(scene, hash):
 
 def hash_file(file):
     fingerprints = file['fingerprints']
+    filename = file['path']
+    # check for sha256 in filename
+    filename_hash = re.search(r"([a-f0-9]{64})", filename)
     if sha256_fp := [fp for fp in fingerprints if fp['type'] == 'sha256']:
-        log.debug("Found in fingerprints")
+        log.debug("[SHA256] found in fingerprints")
         return sha256_fp[0]['value']
+    # check if filename contains hash
+    elif filename_hash:
+        log.debug("[SHA256] found in filename")
+        result = filename_hash.group(1)
+        # don't add to fingerprints, just search with it
+        return result
     else:
-        log.debug("Not found in fingerprints")
+        log.debug("[SHA256] not found, calculating...")
         sha256 = sha_file(file)
         # add to fingerprints
         stash.file_set_fingerprints(file['id'], {"type": "sha256", "value": sha256})
@@ -276,35 +348,54 @@ def check_video_vertical(scene):
 
 def scrape():
     FRAGMENT = json.loads(sys.stdin.read())
-    SCENE_ID = FRAGMENT.get('id')
+    FRAGMENT_ID = FRAGMENT.get('id')
+    scene = None
+    image = False
+    if "photographer" in FRAGMENT:
+        scene = stash.find_image(FRAGMENT_ID)
+        files = scene['visual_files']
+        image = True
+    elif "files" in FRAGMENT:
+        scene = stash.find_scene(FRAGMENT_ID)
+        files = scene['files']
     nomatch_id = stash.find_tag(failure_tag, create=True).get('id')
-    scene = stash.find_scene(SCENE_ID)
     if not scene:
-        log.error("Scene not found - check your config.py file")
+        log.error("Scene/Image not found - check your config.py file")
         sys.exit(1)
     result = None
-    for f in scene['files']:
-        hash = hash_file(f)
-        log.debug(hash)
-        result = getPostByHash(hash)
-        if result is not None:
-            # set studio code to prefix of files that match pattern like '*_source.mp4'
-            if m := re.search(r'(\w+)_source\..+$', f['path']):
-                result['code'] = m.group(1)
-            break
+    if scene:
+        for f in files:
+            hash = hash_file(f)
+            log.debug(hash)
+            result = getPostByHash(hash)
+            if result is not None:
+                # set studio code to prefix of files that match pattern like '*_source.mp4'
+                if m := re.search(r'(\w+)_source\..+$', f['path']):
+                    result['code'] = m.group(1)
+                break
     # if no result, add "SHA: No Match tag"
-    if (result == None or not result['Title'] or not result['URL']):
-        stash.update_scenes({
-            'ids': [SCENE_ID],
-            'tag_ids': {
-                'mode': 'ADD',
-                'ids': [nomatch_id]
-            }
-        })
+    if (result == None or not result['Title']):
+        if scene and not image:
+            stash.update_scenes({
+                'ids': [FRAGMENT_ID],
+                'tag_ids': {
+                    'mode': 'ADD',
+                    'ids': [nomatch_id]
+                }
+            })
+        elif image:
+            stash.update_images({
+                'ids': [FRAGMENT_ID],
+                'tag_ids': {
+                    'mode': 'ADD',
+                    'ids': [nomatch_id]
+                }
+            })
         return None
     # check if scene is vertical
-    if check_video_vertical(scene):
-        result['Tags'].append({ 'Name': 'Vertical Video' })
+    if scene and not image:
+        if check_video_vertical(scene):
+            result['Tags'].append({ 'Name': 'Vertical Video' })
     # Other context based tags
     if re.search(r"\bJOI\b", result['Title'], flags=re.IGNORECASE):
         result['Tags'].append({ 'Name': 'Jerk Off Instruction' })
