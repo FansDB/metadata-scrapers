@@ -271,15 +271,15 @@ def parseFansly(scene, hash):
     result['Studio']['Name'] = studioName
     result['Performers'].append({ 'Name': getnamefromalias(username) })
     # add to group
-    # add to group
-    result['Groups'] = [{
-        "Name": f"{studioName} - ${scene['id']}",
-        "Date": result['Date'],
-        "Tags": result['Tags'], # exclusion of trailer tag is on purpose
-        "Performers": result['Performers'],
-        "Studio": result['Studio'],
-        "URLs": result['URLs']
-    }]
+    if scene['total'] > 1 and scene['type'] == "video":
+        result['Groups'] = [{
+            "Name": f"{studioName} - ${scene['id']}",
+            "Date": result['Date'],
+            "Tags": result['Tags'], # exclusion of trailer tag is on purpose
+            "Performers": result['Performers'],
+            "Studio": result['Studio'],
+            "URLs": result['URLs']
+        }]
     # Add trailer if hash matches preview
     for attachment in scene['attachments']:
         if 'preview' in attachment['name'] and hash in attachment['path']:
@@ -307,14 +307,15 @@ def parseOnlyFans(scene, hash):
     result['Studio']['Name'] = studioName
     result['Performers'].append({ 'Name': getnamefromalias(username) })
     # add to group
-    result['Groups'] = [{
-        "Name": f"{studioName} - {scene['id']}",
-        "Date": result['Date'],
-        "Tags": result['Tags'], # exclusion of trailer tag is on purpose
-        "Performers": result['Performers'],
-        "Studio": result['Studio'],
-        "URLs": result['URLs']
-    }]
+    if scene['total'] > 1 and scene['type'] == "video":
+        result['Groups'] = [{
+            "Name": f"{studioName} - {scene['id']}",
+            "Date": result['Date'],
+            "Tags": result['Tags'], # exclusion of trailer tag is on purpose
+            "Performers": result['Performers'],
+            "Studio": result['Studio'],
+            "URLs": result['URLs']
+        }]
     # add trailer tag if contains keywords
     if findTrailerTrigger(result['Details']):
         result['Tags'].append({ "Name": 'Trailer' })
