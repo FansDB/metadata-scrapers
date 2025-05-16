@@ -264,7 +264,7 @@ def parseFansly(scene, hash):
         else:
             result['Title'] += f" {scene['part']}/{scene['total']}"
     # craft fansly URL
-    postURL = f"https://fansly.com/posts/{scene['id']}"
+    postURL = f"https://fansly.com/post/{scene['id']}"
     result['URLs'].append(postURL)
     # add studio and performer
     studioName = f"{username} (Fansly)"
