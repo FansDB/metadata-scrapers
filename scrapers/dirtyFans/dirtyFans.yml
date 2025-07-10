@@ -1,0 +1,43 @@
+name: dirtyFans
+performerByURL:
+  - action: scrapeJson
+    url:
+      - dirtyfans.com
+    scraper: performerScraper
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: .*dirtyfans\.com/(.*)
+          with: https://www.dirtyfans.com/api/model-profile/$1
+jsonScrapers:
+  performerScraper:
+    performer:
+      Name: data.login
+      Aliases: data.name
+      URL:
+        selector: data.login
+        postProcess:
+          - replace:
+              - regex: (.*)$
+                with: https://www.dirtyfans.com/$1
+      Twitter:
+        selector: data.bio.twitter
+        postProcess:
+          - replace:
+              - regex: .*
+                with: "https://x.com/$1"
+              - regex: \/+$
+                with: ""
+          - javascript: |
+              return value.toLowerCase();
+      Birthdate:
+        selector: data.bio.birthday
+        postProcess:
+          - parseDate: 02.01.2006
+      Country: data.location.country
+      Height: data.bio.height
+      Weight: data.bio.weight
+      Image: 
+        selector: "[data.avatar,data.wallpaper]"
+      Details: data.aboutMe 
+# Last Updated July 10, 2025
