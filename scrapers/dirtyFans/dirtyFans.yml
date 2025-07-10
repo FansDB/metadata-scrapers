@@ -24,7 +24,7 @@ jsonScrapers:
         selector: data.bio.twitter
         postProcess:
           - replace:
-              - regex: .*
+              - regex: (.*)
                 with: "https://x.com/$1"
               - regex: \/+$
                 with: ""
