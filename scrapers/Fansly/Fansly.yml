@@ -8,7 +8,7 @@ sceneByURL:
     queryURLReplace:
       url:
         - regex: 'https://fansly.com/post/(\d+)'
-          with: 'https://coomer.su/fansly/post/$1'
+          with: 'https://coomer.st/fansly/post/$1'
 sceneByFragment:
   action: scrapeXPath
   scraper: sceneScraper
@@ -16,7 +16,7 @@ sceneByFragment:
   queryURLReplace:
     url:
       - regex: 'https://fansly.com/post/(\d+)'
-        with: 'https://coomer.su/fansly/post/$1'
+        with: 'https://coomer.st/fansly/post/$1'
 xPathScrapers:
   sceneScraper:
     scene:

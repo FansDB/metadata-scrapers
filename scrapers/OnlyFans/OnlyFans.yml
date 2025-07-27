@@ -8,7 +8,7 @@ sceneByURL:
     queryURLReplace:
       url:
         - regex: 'https://onlyfans.com/(\d+)/(\w+)'
-          with: 'https://coomer.su/api/v1/onlyfans/user/$2/post/$1'
+          with: 'https://coomer.st/api/v1/onlyfans/user/$2/post/$1'
 sceneByFragment:
   action: scrapeJson
   scraper: sceneScraper
@@ -16,7 +16,7 @@ sceneByFragment:
   queryURLReplace:
     url:
       - regex: 'https://onlyfans.com/(\d+)/(\w+)'
-        with: 'https://coomer.su/api/v1/onlyfans/user/$2/post/$1'
+        with: 'https://coomer.st/api/v1/onlyfans/user/$2/post/$1'
 jsonScrapers:
   sceneScraper:
     scene:
