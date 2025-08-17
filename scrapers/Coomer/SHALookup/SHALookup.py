@@ -85,6 +85,7 @@ stash = StashInterface(stashconfig)
 # get post
 def getPostByHash(hash):
     for _ in range(1, 5):
+        session.headers.update({'Accept': 'text/css'})
         shares = session.get(f'{API_BASE}search_hash/{hash}', timeout=10)
         if shares.status_code == 200:
             break
