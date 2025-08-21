@@ -29,7 +29,8 @@ MAX_TITLE_LENGTH = 64
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
-    'Referer': 'https://coomer.st/search_hash'
+    'Referer': 'https://coomer.st/search_hash',
+    "Accept": 'text/css',
 }
 API_BASE = "https://coomer.st/api/v1/"
 
