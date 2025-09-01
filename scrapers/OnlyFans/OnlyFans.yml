@@ -35,3 +35,11 @@ jsonScrapers:
               - replace:
                   - regex: (\w+)
                     with: "$1 (OnlyFans)"
+driver:
+  headers:
+    - Key: User-Agent
+      Value: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0
+    - Key: Referer
+      Value: https://coomer.st
+    - Key: Accept
+      Value: text/css
