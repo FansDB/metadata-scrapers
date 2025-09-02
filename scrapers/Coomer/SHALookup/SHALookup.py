@@ -83,6 +83,38 @@ def sha_file(file):
 # define stash globally
 stash = StashInterface(stashconfig)
 
+def find_tags(search_tag):
+    log.debug(f"Looking for {search_tag}")
+    if stash.find_tag(search_tag):
+        # If the tag already exists, just return it.
+        log.debug("Tag already exists.")
+        return
+    # Need to check to see if we need to create an alias.
+    log.debug("Retrieving all tags.")
+    tags = stash.find_tags()
+    for tag in tags:
+        log.debug(f"Examining tag: '{tag}'")
+        no_space = tag["name"].replace(" ", "")
+        # Check if the tag name matches without spaces
+        if search_tag.lower() == no_space.lower():
+            log.debug(f"{search_tag} matches {tag}, adding alias.")
+            aliases = tag["aliases"]
+            log.debug(f"Adding {search_tag} to current aliases: {aliases}")
+            aliases.append(string.capwords(search_tag))
+            stash.update_tag({"id": tag["id"], "aliases": aliases})
+            return
+        # Check if any aliases match
+        for alias in tag["aliases"]:
+            ns = alias.replace(" ", "")
+            if search_tag.lower() == ns.lower():
+                aliases = tag["aliases"]
+                log.debug(f"Adding {search_tag} to current aliases: {aliases}")
+                aliases.append(string.capwords(search_tag))
+                stash.update_tag({"id": tag["id"], "aliases": aliases })
+                return
+    # No tags match. Give the user the option to create
+    return
+
 # get post
 def getPostByHash(hash):
     for _ in range(1, 5):
@@ -405,6 +437,10 @@ def scrape():
         result['Tags'].append({ 'Name': 'Cum Eating Instruction' })
     if result['Title'].lower().startswith('stream started at'):
         result['Tags'].append({ 'Name': 'Livestream' })
+    tags = re.findall(r'#(\w+)', result["Details"])
+    for tag in tags:
+        find_tags(tag)
+        result['Tags'].append({ "Name": tag })
     # if result, add tag
     result['Tags'].append({ 'Name': success_tag })
     return result
