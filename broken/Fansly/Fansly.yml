@@ -3,12 +3,15 @@ sceneByURL:
   - action: scrapeXPath
     url:
       - https://fansly.com
+      - https://coomer.st/fansly
     scraper: sceneScraper
     queryURL: "{url}"
     queryURLReplace:
       url:
         - regex: 'https://fansly.com/post/(\d+)'
           with: 'https://coomer.st/fansly/post/$1'
+        - regex: 'https://coomer.st/fansly/user/(\d+)/post/(\d+)'
+          with: 'https://coomer.st/fansly/user/$1/post/$2'
 sceneByFragment:
   action: scrapeXPath
   scraper: sceneScraper
@@ -17,6 +20,8 @@ sceneByFragment:
     url:
       - regex: 'https://fansly.com/post/(\d+)'
         with: 'https://coomer.st/fansly/post/$1'
+      - regex: 'https://coomer.st/fansly/user/(\d+)/post/(\d+)'
+        with: 'https://coomer.st/fansly/user/$1/post/$2'
 xPathScrapers:
   sceneScraper:
     scene:

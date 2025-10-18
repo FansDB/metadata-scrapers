@@ -3,12 +3,15 @@ sceneByURL:
   - action: scrapeJson
     url:
       - https://onlyfans.com
+      - https://coomer.st/onlyfans
     scraper: sceneScraper
     queryURL: "{url}"
     queryURLReplace:
       url:
         - regex: 'https://onlyfans.com/(\d+)/(\w+)'
           with: 'https://coomer.st/api/v1/onlyfans/user/$2/post/$1'
+        - regex: 'https://coomer.st/onlyfans/user/(\w+)/post/(\d+)'
+          with: 'https://coomer.st/api/v1/onlyfans/user/$1/post/$2'
 sceneByFragment:
   action: scrapeJson
   scraper: sceneScraper
@@ -17,12 +20,14 @@ sceneByFragment:
     url:
       - regex: 'https://onlyfans.com/(\d+)/(\w+)'
         with: 'https://coomer.st/api/v1/onlyfans/user/$2/post/$1'
+      - regex: 'https://coomer.st/onlyfans/user/(\w+)/post/(\d+)'
+        with: 'https://coomer.st/api/v1/onlyfans/user/$1/post/$2'
 jsonScrapers:
   sceneScraper:
     scene:
-      Title: 
+      Title:
         selector: post.title
-      Details: 
+      Details:
         selector: post.content
       Date:
         selector: post.published
