@@ -1,0 +1,45 @@
+name: Coomer (Fansly)
+sceneByURL:
+  - action: scrapeXPath
+    url:
+      - https://coomer.st/fansly
+    scraper: sceneScraper
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: 'https://coomer.st/fansly/user/(\d+)/post/(\d+)'
+          with: 'https://coomer.st/fansly/user/$1/post/$2'
+sceneByFragment:
+  action: scrapeXPath
+  scraper: sceneScraper
+  queryURL: "{url}"
+  queryURLReplace:
+    url:
+      - regex: 'https://coomer.st/fansly/user/(\d+)/post/(\d+)'
+        with: 'https://coomer.st/fansly/user/$1/post/$2'
+xPathScrapers:
+  sceneScraper:
+    scene:
+      Title:
+        selector: //div[@class="post__content"]/pre/text()
+      Details:
+        selector: //div[@class="post__content"]/pre/text()
+      Date:
+        selector: //div[@class="post__published"]/child::text()
+        postProcess:
+          - parseDate: "2006-01-02 05:04:05"
+      Studio:
+        Name:
+         selector: //a[@class="post__user-name"]/text()
+         postProcess:
+            - replace:
+                - regex: '$'
+                  with: " (Fansly)"
+driver:
+  headers:
+    - Key: User-Agent
+      Value: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0
+    - Key: Referer
+      Value: https://coomer.st
+    - Key: Accept
+      Value: text/css

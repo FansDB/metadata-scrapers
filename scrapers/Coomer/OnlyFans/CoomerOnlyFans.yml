@@ -1,0 +1,45 @@
+name: Coomer (OnlyFans)
+sceneByURL:
+  - action: scrapeJson
+    url:
+      - https://coomer.st/onlyfans
+    scraper: sceneScraper
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: 'https://coomer.st/onlyfans/user/(\w+)/post/(\d+)'
+          with: 'https://coomer.st/api/v1/onlyfans/user/$1/post/$2'
+sceneByFragment:
+  action: scrapeJson
+  scraper: sceneScraper
+  queryURL: "{url}"
+  queryURLReplace:
+    url:
+      - regex: 'https://coomer.st/onlyfans/user/(\w+)/post/(\d+)'
+        with: 'https://coomer.st/api/v1/onlyfans/user/$1/post/$2'
+jsonScrapers:
+  sceneScraper:
+    scene:
+      Title:
+        selector: post.title
+      Details:
+        selector: post.content
+      Date:
+        selector: post.published
+        postProcess:
+          - parseDate: 2006-01-02T15:04:05
+      Studio:
+        Name:
+            selector: post.user
+            postProcess:
+              - replace:
+                  - regex: (\w+)
+                    with: "$1 (OnlyFans)"
+driver:
+  headers:
+    - Key: User-Agent
+      Value: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0
+    - Key: Referer
+      Value: https://coomer.st
+    - Key: Accept
+      Value: text/css
