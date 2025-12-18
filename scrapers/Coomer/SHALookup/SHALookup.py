@@ -105,7 +105,7 @@ def getPostByHash(hash):
         return None
     # construct url to fetch from API
     post = data['posts'][0]
-    path = f'{API_BASE}/{post["service"]}/user/{post["user"]}/post/{post["id"]}'
+    path = f'{API_BASE}{post["service"]}/user/{post["user"]}/post/{post["id"]}'
     # fetch post
     postres = session.get(path)
     if postres.status_code == 404:
