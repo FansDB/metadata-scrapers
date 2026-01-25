@@ -33,8 +33,8 @@ jsonScrapers:
             selector: post.user
             postProcess:
               - replace:
-                  - regex: (\w+)
-                    with: "$1 (OnlyFans)"
+                  - regex: '$'
+                    with: " (OnlyFans)"
 driver:
   headers:
     - Key: User-Agent
