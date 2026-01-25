@@ -1,6 +1,6 @@
 name: Coomer (Fansly)
 sceneByURL:
-  - action: scrapeXPath
+  - action: scrapeJson
     url:
       - https://coomer.st/fansly
     scraper: sceneScraper
@@ -8,33 +8,33 @@ sceneByURL:
     queryURLReplace:
       url:
         - regex: 'https://coomer.st/fansly/user/(\d+)/post/(\d+)'
-          with: 'https://coomer.st/fansly/user/$1/post/$2'
+          with: 'https://coomer.st/api/v1/fansly/user/$1/post/$2'
 sceneByFragment:
-  action: scrapeXPath
+  action: scrapeJson
   scraper: sceneScraper
   queryURL: "{url}"
   queryURLReplace:
     url:
       - regex: 'https://coomer.st/fansly/user/(\d+)/post/(\d+)'
-        with: 'https://coomer.st/fansly/user/$1/post/$2'
-xPathScrapers:
+        with: 'https://coomer.st/api/v1/fansly/user/$1/post/$2'
+jsonScrapers:
   sceneScraper:
     scene:
       Title:
-        selector: //div[@class="post__content"]/pre/text()
+        selector: post.title
       Details:
-        selector: //div[@class="post__content"]/pre/text()
+        selector: post.content
       Date:
-        selector: //div[@class="post__published"]/child::text()
+        selector: post.published
         postProcess:
-          - parseDate: "2006-01-02 05:04:05"
+          - parseDate: 2006-01-02T15:04:05
       Studio:
         Name:
-         selector: //a[@class="post__user-name"]/text()
-         postProcess:
-            - replace:
-                - regex: '$'
-                  with: " (Fansly)"
+            selector: post.user
+            postProcess:
+              - replace:
+                  - regex: '$'
+                    with: " (Fansly)"
 driver:
   headers:
     - Key: User-Agent
