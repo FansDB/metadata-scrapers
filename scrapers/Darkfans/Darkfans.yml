@@ -19,7 +19,7 @@ xPathScrapers:
                 with: ''
       Aliases: 
         selector: //div[@class='title-text-2 bold white--text mx-2 center']
-      URL: 
+      URLs: 
         selector: //div[@class='regular-text white-light-text mx-2']
         postProcess:
           - replace:
