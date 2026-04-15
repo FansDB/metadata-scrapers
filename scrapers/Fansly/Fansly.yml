@@ -1,0 +1,16 @@
+name: Fansly
+sceneByURL:
+  - action: script
+    url:
+      - https://fansly.com
+    script:
+      - python
+      - Fansly.py
+      - scene-by-url
+
+sceneByFragment:
+  action: script
+  script:
+    - python
+    - Fansly.py
+    - scene-by-fragment
