@@ -10,7 +10,7 @@ HEADERS = {
     'Referer': 'https://coomer.st',
     "Accept": 'text/css',
 }
-POST_URL_RE = re.compile(r"https?://coomer\.st/fansly/user/(\d+)/post/(\d+)")
+FANSLY_POST_RE = re.compile(r"https?://(?:www\.)?fansly\.com/post/(\d+)")
 
 def log_error(message: str) -> None:
     sys.stderr.write(message + "\n")
@@ -33,13 +33,18 @@ def extract_url(operation: str, payload: dict) -> str | None:
 
     return None
 
+def meta_from_postid(postid: string) -> (str, str):
+    lookup = fetch_json(f"https://coomer.st/api/v1/fansly/post/{postid}")
+    return lookup.get("artist_id", ""), lookup.get("post_id", "")
+
 def scene_from_url(scene_url: str) -> dict:
-    match = POST_URL_RE.search(scene_url)
+    match = FANSLY_POST_RE.search(scene_url)
     if not match:
-        log_error(f"Could not parse Coomer Fansly post URL: {scene_url}")
+        log_error(f"Could not parse Fansly post URL: {scene_url}")
         return {}
 
-    user_id, post_id = match.groups()
+    # reused code from Coomer/Fansly.py
+    user_id, post_id = meta_from_postid(match.group(1))
     post_api_url = f"https://coomer.st/api/v1/fansly/user/{user_id}/post/{post_id}"
     profile_api_url = f"https://coomer.st/api/v1/fansly/user/{user_id}/profile"
     
@@ -51,7 +56,7 @@ def scene_from_url(scene_url: str) -> dict:
     studio_name = profile_data.get("name", {})
 
     result = {
-        "urls": [scene_url],
+        "urls": [scene_url, post_api_url], # modified from CoomerFansly
         "studio": {"name": f"{studio_name} (Fansly)" if studio_name else ""},
     }
     
