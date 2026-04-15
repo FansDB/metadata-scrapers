@@ -19,7 +19,7 @@ xPathScrapers:
           - replace:
               - regex: "^@"
                 with: ''
-      URL: 
+      URLs: 
         selector: //div[@class='d-flex flex-column w-100 flex-0']/div[@class='text-muted']
         postProcess:
           - replace:

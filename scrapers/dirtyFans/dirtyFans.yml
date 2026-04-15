@@ -14,7 +14,7 @@ jsonScrapers:
     performer:
       Name: data.login
       Aliases: data.name
-      URL:
+      URLs:
         selector: data.login
         postProcess:
           - replace:
