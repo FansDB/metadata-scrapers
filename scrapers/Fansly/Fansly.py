@@ -3,8 +3,6 @@ import re
 import sys
 from datetime import datetime
 
-import requests
-
 try:
     import requests
 except ModuleNotFoundError:
