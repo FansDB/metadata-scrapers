@@ -9,6 +9,20 @@ sceneByURL:
         - regex: '.+\/post\/(\d+)'
           with: "$1"
     scraper: apiScraper
+performerByName:
+  action: scrapeJson
+  queryURL: https://apiv3.fansly.com/api/v1/account?usernames={}&ngsw-bypass=true
+  scraper: performerSearch
+performerByURL:
+  - action: scrapeJson
+    url:
+      - https://fansly.com
+    scraper: performerScraper
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: ^https:\/\/fansly\.com\/([^\/?#]+)(?:\/posts)?\/?$
+          with: https://apiv3.fansly.com/api/v1/account?usernames=$1&ngsw-bypass=true
 jsonScrapers:
   apiScraper:
     scene:
@@ -34,6 +48,41 @@ jsonScrapers:
                 with: " (Fansly)"
       Performers:
         Name: response.accounts.0.username
+
+  performerSearch:
+    performer:
+      Name: response.0.username
+      Aliases: response.0.displayName
+      Gender:
+        fixed: female
+      URLs:
+        selector: response.0.username
+        postProcess:
+          - replace:
+              - regex: (.*)$
+                with: https://fansly.com/$1/posts
+      Country: response.0.location
+      Image: 
+        selector: response.0.avatar.locations.0.location
+      Details: 
+        selector: response.0.about
+  performerScraper:
+    performer:
+      Name: response.0.username
+      Aliases: response.0.displayName
+      Gender:
+        fixed: female
+      URLs:
+        selector: response.0.username
+        postProcess:
+          - replace:
+              - regex: (.*)$
+                with: https://fansly.com/$1/posts
+      Country: response.0.location
+      Image: 
+        selector: response.0.avatar.locations.0.location
+      Details: 
+        selector: response.0.about
 
 # I have no clue what actual login credentials are
 # driver:
