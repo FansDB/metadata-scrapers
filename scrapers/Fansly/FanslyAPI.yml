@@ -1,0 +1,47 @@
+name: Fansly (API)
+sceneByURL:
+  - action: scrapeJson
+    url:
+      - fansly.com/post/
+    queryURL: https://apiv3.fansly.com/api/v1/post?ids={url}&ngsw-bypass=true
+    queryURLReplace:
+      url:
+        - regex: '.+\/post\/(\d+)'
+          with: "$1"
+    scraper: apiScraper
+jsonScrapers:
+  apiScraper:
+    scene:
+      Title:
+       selector: response.posts.0.content
+       postProcess:
+         - replace:
+           - regex: "\\n+.+"
+             with: ""
+      Code: response.posts.0.id
+      Details: response.posts.0.content
+      Image: response.accountMedia.0.media.variants.0.locations.0.location
+      Date:
+        selector: response.posts.0.createdAt
+        postProcess:
+          - parseDate: unix
+      Studio:
+        Name: 
+          selector: response.accounts.0.username
+          postProcess:
+            - replace:
+              - regex: "$"
+                with: " (Fansly)"
+      Performers:
+        Name: response.accounts.0.username
+
+# I have no clue what actual login credentials are
+# driver:
+#   cookies:
+#     - CookieURL: https://fansly.com
+#       Cookies:
+#         - Name: nats
+#           Domain: fansly.com
+#           ValueRandom: 36
+#           Path: /
+# Last Updated April 14, 2026
