@@ -5,6 +5,13 @@ from datetime import datetime
 
 import requests
 
+try:
+    import requests
+except ModuleNotFoundError:
+    log_error("You need to install the requests module. (https://docs.python-requests.org/en/latest/user/install/)")
+    log_error("If you have pip (normally installed with python), run this command in a terminal (cmd): pip install requests")
+    sys.exit()
+
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
     'Referer': 'https://coomer.st',
