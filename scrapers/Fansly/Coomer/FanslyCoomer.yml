@@ -1,16 +1,16 @@
-name: Coomer (Fansly)
+name: Fansly (Coomer)
 sceneByURL:
   - action: script
     url:
-      - https://coomer.st/fansly
+      - https://fansly.com
     script:
       - python
-      - CoomerFansly.py
+      - FanslyCoomer.py
       - scene-by-url
-          
+
 sceneByFragment:
   action: script
   script:
     - python
-    - CoomerFansly.py
+    - FanslyCoomer.py
     - scene-by-fragment
