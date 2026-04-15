@@ -1,4 +1,4 @@
-name: Fansly
+name: Fansly (API)
 sceneByURL:
   - action: scrapeJson
     url:
@@ -26,7 +26,12 @@ jsonScrapers:
         postProcess:
           - parseDate: unix
       Studio:
-        Name: response.accounts.0.username
+        Name: 
+          selector: response.accounts.0.username
+          postProcess:
+            - replace:
+              - regex: "$"
+                with: " (Fansly)"
       Performers:
         Name: response.accounts.0.username
 
