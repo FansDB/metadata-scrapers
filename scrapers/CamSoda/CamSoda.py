@@ -3,7 +3,6 @@ import json
 import cloudscraper
 
 def sceneByURL(url):
-    # Extract the ID from the URL
     scene_id = url.rstrip('/').split('/')[-1]
     
     scraper = cloudscraper.create_scraper()
@@ -12,13 +11,17 @@ def sceneByURL(url):
     
     media = data.get("media", {})
     
+    tags = [{"name": t["tag_name"]} for t in media.get("tagged", []) if t.get("tag_name")]
+
     return {
         "title": media.get("name"),
         "details": media.get("description"),
         "date": media.get("created_at", "")[:10],
         "image": media.get("thumbnail_url"),
         "performers": [{"name": media.get("user_display_name")}],
-        "studio": {"name": f"{media.get('username')} (CamSoda)"},        
+        "studio": {"name": f"{media.get('username')} (CamSoda)"},
+        "tags": tags,
+        "code": scene_id,
         "urls": [url],
     }
 
