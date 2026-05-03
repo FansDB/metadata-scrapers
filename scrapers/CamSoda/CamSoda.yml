@@ -1,0 +1,9 @@
+name: CamSoda
+sceneByURL:
+  - action: script
+    url:
+      - camsoda.com/
+    script:
+      - python3
+      - CamSoda.py
+      - sceneByURL
