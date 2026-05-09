@@ -1,0 +1,29 @@
+name: Fansly (API)
+sceneByURL:
+  - action: script
+    url:
+      - fansly.com/post/
+    script:
+      - python3
+      - FanslyAPI.py
+    scraper: FanslyAPI
+
+performerByName:
+  action: script
+  script:
+    - python3
+    - FanslyAPI.py
+    - performer_name
+  scraper: FanslyAPI
+
+performerByURL:
+  - action: script
+    url:
+      - fansly.com
+    script:
+      - python3
+      - FanslyAPI.py
+      - performer_url
+    scraper: FanslyAPI
+
+# Last Updated May 09, 2026
