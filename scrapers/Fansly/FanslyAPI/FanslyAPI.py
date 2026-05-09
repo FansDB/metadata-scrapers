@@ -5,12 +5,19 @@ import re
 import sys
 from datetime import datetime, timezone
 
-sys.path.insert(0, "..")
+# Add possible py_common locations
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+for _path in [
+    SCRIPT_DIR,
+    os.path.join(SCRIPT_DIR, ".."),
+    os.path.join(SCRIPT_DIR, "..", ".."),
+    os.path.join(SCRIPT_DIR, "..", "..", ".."),
+]:
+    sys.path.insert(0, _path)
 from py_common import log
 import requests
 
 FANSLY_API  = "https://apiv3.fansly.com/api/v1"
-SCRIPT_DIR  = os.path.dirname(os.path.realpath(__file__))
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.ini")
 
 DEFAULT_CONFIG = """[FanslyAPI]
@@ -125,10 +132,30 @@ def scrape_scene(post_id, token):
     content  = post.get("content", "") or ""
     details, tags = parse_tags_from_content(content)
 
-    # Title = first line of content
-    title = content.split("\n")[0].strip()
-    # Strip hashtags from title too
-    title = re.sub(r'\s*#\w+', '', title).strip() or f"Post {post_id}"
+    # Title = first non-empty line after stripping hashtags
+    title = ""
+    for line in content.split("\n"):
+        candidate = re.sub(r'\s*#\w+', '', line).strip()
+        if candidate:
+            title = candidate
+            break
+    if not title:
+        title = f"Post {post_id}"
+
+    # If title has no letters/digits, append "studio - date" for clarity
+    if not re.search(r'[a-zA-Z0-9]', title):
+        username = account.get("username", "")
+        created_at = post.get("createdAt")
+        if created_at:
+            try:
+                date_str = datetime.fromtimestamp(int(created_at), tz=timezone.utc).strftime("%Y-%m-%d")
+            except Exception:
+                date_str = ""
+        else:
+            date_str = ""
+        suffix = " - ".join(p for p in [username, date_str] if p)
+        if suffix:
+            title = f"{title} - {suffix}"
 
     scrape = {}
     scrape["title"]   = title
