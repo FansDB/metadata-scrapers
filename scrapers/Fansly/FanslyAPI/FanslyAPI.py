@@ -67,21 +67,29 @@ def api_get(path, token=None):
 
 
 def parse_tags_from_content(content):
-    """Extract #hashtags from post content, return (clean_details, tags)."""
+    """Extract #hashtags and @mentions from post content, return (clean_details, tags, mentioned_performers)."""
     if not content:
-        return "", []
+        return "", [], []
 
     tags = []
-    seen = set()
+    seen_tags = set()
     for m in re.finditer(r'#(\w+)', content):
         name = m.group(1)
-        if name.lower() not in seen:
-            seen.add(name.lower())
+        if name.lower() not in seen_tags:
+            seen_tags.add(name.lower())
             tags.append({"name": name})
 
-    # Strip hashtags from end of content for clean details
+    mentioned = []
+    seen_names = set()
+    for m in re.finditer(r'@(\w+)', content):
+        name = m.group(1)
+        if name.lower() not in seen_names:
+            seen_names.add(name.lower())
+            mentioned.append(name)
+
+    # Strip only hashtags from details, keep @mentions
     details = re.sub(r'\s*#\w+', '', content).strip()
-    return details, tags
+    return details, tags, mentioned
 
 
 def find_image(data, key="media"):
@@ -127,10 +135,16 @@ def scrape_scene(post_id, token):
 
     post     = posts[0]
     accounts = resp.get("accounts", [])
-    account  = accounts[0] if accounts else {}
+
+    # Match account to post owner by accountId, don't assume accounts[0]
+    post_account_id = str(post.get("accountId", ""))
+    account = next(
+        (a for a in accounts if str(a.get("id", "")) == post_account_id),
+        accounts[0] if accounts else {}
+    )
 
     content  = post.get("content", "") or ""
-    details, tags = parse_tags_from_content(content)
+    details, tags, mentioned = parse_tags_from_content(content)
 
     # Title = first non-empty line after stripping hashtags
     title = ""
@@ -181,10 +195,16 @@ def scrape_scene(post_id, token):
     if tags:
         scrape["tags"] = tags
 
-    # Performer
+    # Performer — account owner plus any @mentioned performers
     username = account.get("username", "")
+    performers = []
     if username:
-        scrape["performers"] = [{"name": username}]
+        performers.append({"name": username})
+    for name in mentioned:
+        if name.lower() != username.lower():
+            performers.append({"name": name})
+    if performers:
+        scrape["performers"] = performers
 
     # Studio
     if username:
