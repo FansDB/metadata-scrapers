@@ -87,8 +87,17 @@ def parse_tags_from_content(content):
             seen_names.add(name.lower())
             mentioned.append(name)
 
-    # Strip only hashtags from details, keep @mentions
-    details = re.sub(r'\s*#\w+', '', content).strip()
+    # Strip only standalone hashtag lines from details, keep list items like "- #tag"
+    # and keep @mentions
+    lines = content.split("\n")
+    detail_lines = []
+    for line in lines:
+        stripped = line.strip()
+        # Skip lines that are purely hashtags (no other content)
+        if stripped and re.match(r'^(#\w+\s*)+$', stripped):
+            continue
+        detail_lines.append(line)
+    details = "\n".join(detail_lines).strip()
     return details, tags, mentioned
 
 
