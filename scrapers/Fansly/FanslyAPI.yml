@@ -3,6 +3,8 @@ sceneByURL:
   - action: scrapeJson
     url:
       - fansly.com/post/
+# You can add '&sessionToken={InsertTokenHere}' to the end of the queryURL to scrape paywalled content. 
+# Grab the token from Fansly: F12 -> Network -> any apiv3.fansly.com request -> look for sessionToken query param
     queryURL: https://apiv3.fansly.com/api/v1/post?ids={url}&ngsw-bypass=true
     queryURLReplace:
       url:
@@ -48,6 +50,16 @@ jsonScrapers:
                 with: " (Fansly)"
       Performers:
         Name: response.accounts.0.username
+      Tags:
+        Name: 
+          selector: response.posts.0.content
+          postProcess:
+            - replace:
+              - regex: "(?s).*?(#.*)|.*"
+                with: "$1"
+              - regex: "#"
+                with: ""
+          split: " "
 
   performerSearch:
     performer:
@@ -93,4 +105,4 @@ jsonScrapers:
 #           Domain: fansly.com
 #           ValueRandom: 36
 #           Path: /
-# Last Updated April 14, 2026
+# Last Updated May 10, 2026
