@@ -45,3 +45,6 @@ From [https://github.com/stashapp/CommunityScrapers](https://github.com/stashapp
 - `./build-site.sh`
 - `./validator/*`
 - `./.github/workflows/validate.yml`
+- `./scrapers/OnlyHaven/py_common/*`
+- `./scrapers/OnlyHaven/OnlyHaven.yml`
+- `./scrapers/OnlyHaven/OnlyHaven.py`
