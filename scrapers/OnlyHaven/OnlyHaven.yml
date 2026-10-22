@@ -1,5 +1,4 @@
 name: OnlyHaven
-# requires: py_common
 sceneByURL:
   - action: script
     url:
