@@ -12,7 +12,7 @@ performerByURL:
     queryURLReplace:
       url:
         - regex: .*/Profile/(\d+)/.*
-          with: https://www.manyvids.com/bff/profile/profiles/$1
+          with: https://api.manyvids.com/profile/profile/$1
 sceneByName:
   action: scrapeJson
   queryURL: https://www.manyvids.com/bff/search/results?keywords={}&contentPref=0
@@ -24,13 +24,13 @@ sceneByQueryFragment:
   queryURLReplace:
     url:
       - regex: ^(https:\/\/www\.manyvids\.com\/Video\/)
-        with: https://www.manyvids.com/bff/store/video/
+        with: https://api.manyvids.com/store/video/
       - regex: /[^/]*/*$
         with: ""
 sceneByFragment:
   action: scrapeJson
   scraper: sceneScraper
-  queryURL: "https://www.manyvids.com/bff/store/video/{filename}"
+  queryURL: "https://api.manyvids.com/store/video/{filename}"
   queryURLReplace:
     filename:
       - regex: .*?(\d{6,8}).*
@@ -44,7 +44,7 @@ sceneByURL:
     queryURLReplace:
       url:
         - regex: .*?(\d+).*
-          with: https://www.manyvids.com/bff/store/video/$1
+          with: https://api.manyvids.com/store/video/$1
 jsonScrapers:
   performerSearch:
     performer:
@@ -66,32 +66,66 @@ jsonScrapers:
               with: ""
       Gender: identification
       URLs:
-        selector: "[legacyUserId,urlHandle]"
-        concat: /
+        selector: '{"id":legacyUserId,"handle":urlHandle,"insta":socLinkInstagram,"tw":socLinkTwitter,"yt":socLinkYoutube}'
         postProcess:
-          - replace:
-              - regex: (.*)$
-                with: https://www.manyvids.com/Profile/$1/Store/Videos
-      Twitter:
-        selector: socLnkTwitter
-        postProcess:
-          - replace:
-              - regex: .*(?:twitter|x).com/
-                with: "https://x.com/$1"
-              - regex: \/+$
-                with: ""
           - javascript: |
-              return value.toLowerCase();
-      Instagram:
-        selector: socLnkInstagram
-        postProcess:
-          - replace:
-              - regex: .*instagram.com/
-                with: "https://www.instagram.com/$1"
-              - regex: \/+$
-                with: ""
-          - javascript: |
-              return value.toLowerCase();
+              const { id, handle, insta, tw, yt } = JSON.parse(value || "{}");
+              const usernameFrom = (raw, kind) => {
+                if (!raw) return "";
+                const original = String(raw);
+                let s = original
+                  .trim()
+                  .toLowerCase()
+                  .replace(/^https?:\/\//i, "")
+                  .replace(/^www\./i, "")
+                  .replace(/\/+$/, "");
+                if (!s) return "";
+
+                if (kind === "x") {
+                  const screenName = (original.match(/[?&]screen_name=([a-z0-9_]+)/i) || [])[1];
+                  if (screenName) return screenName.toLowerCase();
+                }
+
+                const slash = s.indexOf("/");
+                if (slash > -1 && s.slice(0, slash).includes(".")) {
+                  s = s.slice(slash + 1);
+                }
+
+                s = s.split("?")[0].split("#")[0].replace(/^\/+/, "");
+                if (!s) return "";
+
+                if (s.startsWith("user/")) s = s.slice(5);
+                if (s.startsWith("channel/")) s = s.slice(8);
+                if (s.startsWith("c/")) s = s.slice(2);
+
+                if (kind === "x") {
+                  s = s.replace(/^(twitter\.com|x\.com)\//, "");
+                }
+
+                const part = s.split("/").find(Boolean) || "";
+                return part.replace(/^@/, "");
+              };
+
+              const canonical = (raw, kind) => {
+                const username = usernameFrom(raw, kind);
+                if (!username) return "";
+                if (kind === "x") return `https://x.com/${username}`;
+                if (kind === "instagram") return `https://www.instagram.com/${username}`;
+                if (kind === "youtube") return `https://youtube.com/${username}`;
+                return "";
+              };
+
+              const urls = [
+                id && handle ? `https://www.manyvids.com/Profile/${id}/${handle}/Store/Videos` : "",
+                canonical(insta, "instagram"),
+                canonical(tw, "x"),
+                canonical(yt, "youtube"),
+              ];
+              return urls
+                .filter(Boolean)
+                .map((u) => u.toLowerCase())
+                .join("\n");
+        split: "\n"
       Birthdate:
         selector: dob
         postProcess:
@@ -128,11 +162,19 @@ jsonScrapers:
       Details: 
         selector: description
         postProcess:
-          - replace:
-              - regex: "<p>"
-                with: ""
-              - regex: "</p>"
-                with: ""    
+          - javascript: |
+              return String(value || "")
+                .replace(/\r/g, "")
+                .replace(/\\(['"])/g, "$1")
+                .replace(/<\/p>\s*<p>/g, "\n")
+                .replace(/<br\s*\/?>/g, "\n")
+                .replace(/<[^>]+>/g, "")
+                .replace(/&amp;/g, "&")
+                .replace(/&quot;/g, '"')
+                .replace(/&#0?39;/g, "'")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .trim()
   sceneSearch:
     scene:
       Title: vids.#.title
@@ -151,33 +193,14 @@ jsonScrapers:
       Title:
         selector: data.title
         postProcess:
-            - replace:
-                - regex: "&amp;"
-                  with: "&"
-            - replace:
-                - regex: "&quot;"
-                  with: "\""
-            - replace:
-                - regex: "&lt;"
-                  with: "<"
-            - replace:
-                - regex: "&gt;"
-                  with: ">"
+          - &decodeEntities
+            javascript: |
+              const entities = { "&amp;": "&", "&quot;": '"', "&lt;": "<", "&gt;": ">" };
+              return String(value || "").replace(/&(?:amp|quot|lt|gt);/g, (e) => entities[e]);
       Details:
         selector: data.description
         postProcess:
-            - replace:
-                - regex: "&amp;"
-                  with: "&"
-            - replace:
-                - regex: "&quot;"
-                  with: "\""
-            - replace:
-                - regex: "&lt;"
-                  with: "<"
-            - replace:
-                - regex: "&gt;"
-                  with: ">"
+          - *decodeEntities
       Code: data.id
       URL:
         selector: data.url
